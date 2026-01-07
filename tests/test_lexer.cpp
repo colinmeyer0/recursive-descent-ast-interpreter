@@ -6,6 +6,13 @@
 #include "util/file_io.hpp"
 #include "util/cli.hpp"
 
+// Debug print of token stream
+void print_token_stream(std::vector<Token> tokens) {
+    for (const Token &token : tokens) {
+        std::cout << token_type_name(token.type) << " '" << token.lexeme << "'\n";
+    }
+}
+
 int main(int argc, char **argv) {
     // Missing input path
     if (argc < 2) {
@@ -25,6 +32,8 @@ int main(int argc, char **argv) {
 
     // lexing failure
     if (check_lexer_errors(lexer)) return 1;
+
+    print_token_stream(tokens);
 
     return 0; // Success
 }

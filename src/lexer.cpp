@@ -1,8 +1,5 @@
 #include "lexer.hpp"
 
-#include <cctype>
-#include <unordered_map>
-
 Lexer::Lexer(std::string source) : source_(source) {} // Store source string
 
 std::vector<Token> Lexer::scan_tokens() {
@@ -12,13 +9,10 @@ std::vector<Token> Lexer::scan_tokens() {
         scan_token();                        // Consume one token (or skip whitespace/comments)
     }
 
-    // CHANGE TO USE FUNCTION
     // Always append EOF to simplify parser logic
-    Span span;
-    span.start = current_; // EOF span is zero-length at end
-    span.end = current_;
-    span.pos = SourcePos{line_, col_};
-    tokens_.push_back(Token{TokenType::EOF_, "", std::monostate{}, span}); // Sentinel
+    start_ = current_;
+    start_pos_ = SourcePos{line_, col_};
+    add_token(TokenType::EOF_);
 
     return tokens_;
 }
