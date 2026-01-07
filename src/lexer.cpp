@@ -3,50 +3,196 @@
 #include <cctype>
 #include <unordered_map>
 
-Lexer::Lexer(std::string source): source_(std::move(source)) {} // Store source buffer
+Lexer::Lexer(std::string source) : source_(source) {} // Store source string
 
 std::vector<Token> Lexer::scan_tokens() {
     while (!is_at_end()) {
-        start_ = current_; // Mark beginning of next lexeme
+        start_ = current_;                   // Mark beginning of next lexeme
         start_pos_ = SourcePos{line_, col_}; // Remember line/col for this token
-        scan_token(); // Consume one token (or skip whitespace/comments)
+        scan_token();                        // Consume one token (or skip whitespace/comments)
     }
 
+    // CHANGE TO USE FUNCTION
     // Always append EOF to simplify parser logic
     Span span;
     span.start = current_; // EOF span is zero-length at end
     span.end = current_;
     span.pos = SourcePos{line_, col_};
-    tokens_.push_back(
-        Token{TokenType::EOF_, "", std::monostate{}, span}); // Sentinel
+    tokens_.push_back(Token{TokenType::EOF_, "", std::monostate{}, span}); // Sentinel
 
     return tokens_;
 }
 
+void Lexer::scan_token() {
+    char c = advance();
+    if (scan_single_char_token(c)) return;
+    if (scan_two_char_operator(c)) return;
+    if (scan_paired_operator(c)) return;
+    if (scan_slash_or_comment(c)) return;
+    if (is_whitespace(c)) return;
+
+    if (is_digit(c)) {
+        scan_number();
+        return;
+    }
+    if (is_alpha(c)) {
+        scan_identifier_or_keyword();
+        return;
+    }
+
+    add_error("Unexpected character.", start_pos_);
+}
+
+bool Lexer::scan_single_char_token(char c) {
+    switch (c) {
+    case '(': add_token(TokenType::LEFT_PAREN); return true;
+    case ')': add_token(TokenType::RIGHT_PAREN); return true;
+    case '{': add_token(TokenType::LEFT_BRACE); return true;
+    case '}': add_token(TokenType::RIGHT_BRACE); return true;
+    case ';': add_token(TokenType::SEMICOLON); return true;
+    case ',': add_token(TokenType::COMMA); return true;
+    case '+': add_token(TokenType::PLUS); return true;
+    case '-': add_token(TokenType::MINUS); return true;
+    case '*': add_token(TokenType::STAR); return true;
+    default: return false;
+    }
+}
+
+bool Lexer::scan_two_char_operator(char c) {
+    switch (c) {
+    case '!': add_token(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG); return true;
+    case '=': add_token(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); return true;
+    case '<': add_token(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS); return true;
+    case '>': add_token(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); return true;
+    default: return false;
+    }
+}
+
+bool Lexer::scan_paired_operator(char c) {
+    // check next char to see if paired, otherwise error
+    switch (c) {
+    case '&':
+        if (match('&'))
+            add_token(TokenType::AND_AND);
+        else
+            add_error("Unexpected '&' without pair.", start_pos_);
+        return true;
+    case '|':
+        if (match('|'))
+            add_token(TokenType::OR_OR);
+        else
+            add_error("Unexpected '|' without pair.", start_pos_);
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Lexer::scan_slash_or_comment(char c) {
+    if (c != '/') return false;
+
+    // peak next char to see if comment -> discard rest of line
+    if (match('/')) {
+        while (peek() != '\n' && !is_at_end())
+            advance();
+    } else {
+        add_token(TokenType::SLASH);
+    }
+    return true;
+}
+
+void Lexer::scan_number() {
+    while (is_digit(peek())) advance(); // advance to end of number
+
+    // add value of number to token vector
+    std::string text = source_.substr(start_, current_ - start_);
+    int value = std::stoi(text);
+    add_token(TokenType::NUMBER, value);
+}
+
+void Lexer::scan_identifier_or_keyword() {
+    while (is_alnum(peek())) advance(); // advance to end of identifier/keyword
+
+    std::string text = source_.substr(start_, current_ - start_);
+
+    static const std::unordered_map<std::string, TokenType> keywords = {
+        {"let", TokenType::LET},
+        {"if", TokenType::IF},
+        {"else", TokenType::ELSE},
+        {"while", TokenType::WHILE},
+        {"break", TokenType::BREAK},
+        {"continue", TokenType::CONTINUE},
+        {"return", TokenType::RETURN},
+        {"fn", TokenType::FN},
+        {"true", TokenType::TRUE},
+        {"false", TokenType::FALSE},
+    };
+
+    auto it = keywords.find(text);
+
+    // doesn't appear in keywords -> identifier
+    if (it == keywords.end()) {
+        add_token(TokenType::IDENTIFIER);
+        return;
+    }
+
+    // add keyword token
+    TokenType type = it->second;
+    if (type == TokenType::TRUE)
+        add_token(type, true);
+    else if (type == TokenType::FALSE)
+        add_token(type, false);
+    else
+        add_token(type);
+}
+
+void Lexer::add_token(TokenType type) {
+    // no literal value
+    add_token(type, std::monostate{});
+}
+
+void Lexer::add_token(TokenType type, Literal literal) {
+    Span span;
+    span.start = start_;
+    span.end = current_;
+    span.pos = start_pos_;
+    std::string lexeme = source_.substr(start_, current_ - start_);   // slice text
+    tokens_.push_back(Token{type, lexeme, std::move(literal), span}); // add token to token vector
+}
+
+void Lexer::add_error(const std::string &message, const SourcePos &pos) {
+    errors_.push_back("Line " + std::to_string(pos.line) + ", col " +
+                      std::to_string(pos.col) + ": " + message); // format error
+}
+
 const std::vector<std::string> &Lexer::errors() const {
-    return errors_;
-} // Access errors
+    return errors_; // access errors
+}
+
+bool Lexer::is_whitespace(char c) const {
+    return c == ' ' || c == '\r' || c == '\t' || c == '\n';
+}
 
 bool Lexer::is_at_end() const {
-    return current_ >= source_.size();
-} // Bounds check
+    return current_ >= source_.size(); // bounds check
+}
 
 char Lexer::advance() {
-    char c = source_[current_++]; // Consume current char
-    if (c == '\n') {
-        line_++;  // Track newline
-        col_ = 1; // Reset column to 1-based
+    char c = source_[current_++]; // consume current char
+    if (c == '\n') { // newline
+        line_++;
+        col_ = 1;
     } else {
-        col_++; // Advance column on same line
+        col_++; // advance column on same line
     }
     return c;
 }
 
 bool Lexer::match(char expected) {
     if (is_at_end() || source_[current_] != expected) {
-        return false; // No match
+        return false; // no match
     }
-    advance(); // Consume matched char
+    advance(); // consume matched char
     return true;
 }
 
@@ -61,159 +207,14 @@ char Lexer::peek_next() const {
     return source_[current_ + 1];
 }
 
-void Lexer::scan_token() {
-    char c = advance(); // Consume next char to decide token type
-    switch (c) {
-    case '(':
-        add_token(TokenType::LEFT_PAREN);
-        break;
-    case ')':
-        add_token(TokenType::RIGHT_PAREN);
-        break;
-    case '{':
-        add_token(TokenType::LEFT_BRACE);
-        break;
-    case '}':
-        add_token(TokenType::RIGHT_BRACE);
-        break;
-    case ';':
-        add_token(TokenType::SEMICOLON);
-        break;
-    case ',':
-        add_token(TokenType::COMMA);
-        break;
-    case '+':
-        add_token(TokenType::PLUS);
-        break;
-    case '-':
-        add_token(TokenType::MINUS);
-        break;
-    case '*':
-        add_token(TokenType::STAR);
-        break;
-    case '!':
-        add_token(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
-        break;
-    case '=':
-        add_token(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL);
-        break;
-    case '<':
-        add_token(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
-        break;
-    case '>':
-        add_token(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER);
-        break;
-    case '&':
-        if (match('&')) {
-            add_token(TokenType::AND_AND);
-        } else {
-            add_error("Unexpected '&' without pair.",
-                      start_pos_); // Single '&' invalid
-        }
-        break;
-    case '|':
-        if (match('|')) {
-            add_token(TokenType::OR_OR);
-        } else {
-            add_error("Unexpected '|' without pair.",
-                      start_pos_); // Single '|' invalid
-        }
-        break;
-    case '/':
-        if (match('/')) {
-            // Line comment: consume until newline or EOF
-            while (peek() != '\n' && !is_at_end()) {
-                advance(); // Discard comment text
-            }
-        } else {
-            add_token(TokenType::SLASH);
-        }
-        break;
-    case ' ':
-    case '\r':
-    case '\t':
-    case '\n':
-        break; // Ignore whitespace.
-    default:
-        if (is_digit(c)) {
-            // Integer literals only for now.
-            while (is_digit(peek())) {
-                advance(); // Consume remaining digits.
-            }
-            std::string text =
-                source_.substr(start_, current_ - start_); // Raw digits.
-            int value = std::stoi(text); // Simple base-10 parse.
-            add_token(TokenType::NUMBER, value);
-        } else if (is_alpha(c)) {
-            // Identifiers and keywords.
-            while (is_alnum(peek())) {
-                advance(); // Extend identifier.
-            }
-            std::string text =
-                source_.substr(start_, current_ - start_); // Identifier text.
-            static const std::unordered_map<std::string, TokenType> keywords = {
-                {"let", TokenType::LET},
-                {"if", TokenType::IF},
-                {"else", TokenType::ELSE},
-                {"while", TokenType::WHILE},
-                {"break", TokenType::BREAK},
-                {"continue", TokenType::CONTINUE},
-                {"return", TokenType::RETURN},
-                {"fn", TokenType::FN},
-                {"true", TokenType::TRUE},
-                {"false", TokenType::FALSE},
-            };
-            auto it = keywords.find(text); // Lookup keyword.
-            if (it != keywords.end()) {
-                TokenType type = it->second; // Keyword token type.
-                if (type == TokenType::TRUE) {
-                    add_token(type, true);
-                } else if (type == TokenType::FALSE) {
-                    add_token(type, false);
-                } else {
-                    add_token(type);
-                }
-            } else {
-                add_token(TokenType::IDENTIFIER);
-            }
-        } else {
-            add_error("Unexpected character.",
-                      start_pos_); // Unrecognized input.
-        }
-        break;
-    }
-}
-
-void Lexer::add_token(TokenType type) {
-    add_token(type, std::monostate{});
-} // No literal.
-
-void Lexer::add_token(TokenType type, Literal literal) {
-    Span span;
-    span.start = start_;
-    span.end = current_;
-    span.pos = start_pos_;
-    std::string lexeme =
-        source_.substr(start_, current_ - start_); // Slice text.
-    tokens_.push_back(
-        Token{type, lexeme, std::move(literal), span}); // Emit token.
-}
-
-void Lexer::add_error(const std::string &message, const SourcePos &pos) {
-    errors_.push_back("Line " + std::to_string(pos.line) + ", col " +
-                      std::to_string(pos.col) + ": " +
-                      message); // Format error.
-}
-
 bool Lexer::is_alpha(char c) const {
-    return std::isalpha(static_cast<unsigned char>(c)) ||
-           c == '_'; // ASCII-ish.
+    return std::isalpha(static_cast<unsigned char>(c)) || c == '_';
 }
 
 bool Lexer::is_digit(char c) const {
-    return std::isdigit(static_cast<unsigned char>(c)); // ASCII digits only.
+    return std::isdigit(static_cast<unsigned char>(c)); // ASCII digits only
 }
 
 bool Lexer::is_alnum(char c) const {
     return is_alpha(c) || is_digit(c);
-} // Combined.
+} // Combined

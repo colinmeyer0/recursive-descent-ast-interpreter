@@ -1,12 +1,12 @@
 #pragma once
 
-// Core token and source location types used across the lexer/parser.
+// Core token and source location types used across the lexer/parser
 
 #include <cstddef>
 #include <string>
 #include <variant>
 
-// Token kinds recognized by the lexer.
+// Token kinds recognized by the lexer
 enum class TokenType {
     // Grouping
     LEFT_PAREN,  // (
@@ -62,31 +62,31 @@ enum class TokenType {
     EOF_
 };
 
-// Literal payload for tokens that carry values.
+// Literal payload for tokens that carry values
 using Literal = std::variant<std::monostate, int, bool>;
 
-// 1-based line/column position at a specific point in source.
+// 1-based line/column position at a specific point in source
 struct SourcePos {
-    int line = 1; // Line number.
-    int col = 1;  // Column number.
+    int line = 1; // Line number
+    int col = 1;  // Column number
 };
 
-// Absolute byte span plus the line/column at the start.
+// Absolute byte span plus the line/column at the start
 struct Span {
-    std::size_t start = 0; // Inclusive start offset.
-    std::size_t end = 0;   // Exclusive end offset.
-    SourcePos pos;         // Line/col for start.
+    std::size_t start = 0; // Inclusive start offset
+    std::size_t end = 0;   // Exclusive end offset
+    SourcePos pos;         // Line/col for start
 };
 
-// A single scanned token, including lexeme and parsed literal.
+// A single scanned token, including lexeme and parsed literal
 struct Token {
-    TokenType type;     // Token kind.
-    std::string lexeme; // Raw text slice.
-    Literal literal;    // Parsed value if applicable.
-    Span span;          // Location metadata.
+    TokenType type;     // Token kind
+    std::string lexeme; // Raw text slice
+    Literal literal;    // Parsed value if applicable
+    Span span;          // Location metadata
 };
 
-// Helpful string name for debugging output.
+// string name for debugging output
 inline const char *token_type_name(TokenType type) {
     switch (type) {
     case TokenType::LEFT_PAREN:
@@ -156,5 +156,5 @@ inline const char *token_type_name(TokenType type) {
     case TokenType::EOF_:
         return "EOF";
     }
-    return "UNKNOWN"; // Fallback for unexpected enum values.
+    return "UNKNOWN"; // Fallback for unexpected enum values
 }
