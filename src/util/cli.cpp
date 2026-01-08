@@ -10,3 +10,13 @@ bool check_lexer_errors(const Lexer& lexer) {
     }
     return false; // no failures
 }
+
+bool check_parser_errors(const Parser& parser) {
+    if (!parser.errors().empty()) {
+        for (const auto &err : parser.errors()) {
+            std::cerr << err << "\n";
+        }
+        return true;
+    }
+    return false;
+}

@@ -15,13 +15,28 @@ struct Stmt;
 using ExprPtr = std::unique_ptr<Expr>;
 using StmtPtr = std::unique_ptr<Stmt>;
 
+
+// === HELPER TYPES ===
+
+struct TextInfo { // raw text and span
+    std::string text;
+    Span span;
+};
+
+struct Op { // token type and span
+    TokenType type;
+    Span span;
+};
+
 // === EXPRESSIONS ===
+// definition: produces a value
+
 struct LiteralExpr { // int/bool
     Literal value;
 };
 
-struct IdentifierExpr { // identifier
-    std::string name;
+struct VariableExpr { // identifier
+    TextInfo name;
 };
 
 struct GroupingExpr { // parentheses, brackets, etc.
@@ -29,30 +44,31 @@ struct GroupingExpr { // parentheses, brackets, etc.
 };
 
 struct UnaryExpr { // '!x', '-x', etc.
-    Token op;
+    Op op;
     ExprPtr right;
 };
 
 struct BinaryExpr { // expression operator expression ('3 + 4', 'x < y', etc.)
     ExprPtr left;
-    Token op;
+    Op op;
     ExprPtr right;
 };
 
 struct AssignExpr { // assignment
-    std::string name;
+    TextInfo name;
     ExprPtr value;
 };
 
 struct CallExpr { // function call
     ExprPtr callee;
     std::vector<ExprPtr> arguments;
+    Span paren_span; // span of parentheses (for error reporting)
 };
 
 // all variants of expressions
 using ExprVariant = std::variant<
     LiteralExpr,
-    IdentifierExpr,
+    VariableExpr,
     GroupingExpr,
     UnaryExpr,
     BinaryExpr,
@@ -67,14 +83,15 @@ struct Expr {
 
 
 // === STATEMENTS ===
+// definition: performs an action
 
 struct ExprStmt { // store expression
     ExprPtr expression;
 };
 
-struct LetStmt { // assignment
-    std::string name;
-    ExprPtr initializer; // can be nullptr if uninitialized
+struct LetStmt { // declaration (must be initialized)
+    TextInfo name;
+    ExprPtr initializer; // never nullptr
 };
 
 struct BlockStmt { // block of code (contained in braces)
@@ -99,10 +116,10 @@ struct ReturnStmt { // return statement (optional value)
     ExprPtr value; // can be nullptr
 };
 
-struct FnStmt { // function statement (body = pointer to block statement)
-    std::string name;
-    std::vector<std::string> params;
-    std::vector<StmtPtr> body; // block statement
+struct FnStmt { // function statement
+    TextInfo name;
+    std::vector<TextInfo> params;
+    BlockStmt body; // not a pointer
 };
 
 // all variants of statements

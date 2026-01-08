@@ -27,13 +27,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // use lexer to create token vector
     Lexer lexer(std::move(source)); // Create lexer
     std::vector<Token> tokens = lexer.scan_tokens(); // Lex entire input
+    if (check_lexer_errors(lexer)) return 1; // lexing failure
 
-    // lexing failure
-    if (check_lexer_errors(lexer)) return 1;
-
-    print_token_stream(tokens);
+    print_token_stream(tokens); // debug
 
     return 0; // Success
 }

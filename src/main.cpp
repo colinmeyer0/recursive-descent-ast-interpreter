@@ -2,6 +2,7 @@
 #include <string>
 
 #include "lexer.hpp"
+#include "parser.hpp"
 #include "token.hpp"
 #include "util/file_io.hpp"
 #include "util/cli.hpp"
@@ -20,11 +21,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // use lexer to create token vector
     Lexer lexer(std::move(source)); // Create lexer
     std::vector<Token> tokens = lexer.scan_tokens(); // Lex entire input
+    if (check_lexer_errors(lexer)) return 1; // lexing failure
 
-    // lexing failure
-    if (check_lexer_errors(lexer)) return 1;
+    // use parser to create AST
+    Parser parser(std::move(tokens)); // create parser
+    std::vector<StmtPtr> program = parser.parse(); // parse token stream
+    if (check_parser_errors(parser)) return 1; // parsing failure
 
     return 0; // Success
 }
