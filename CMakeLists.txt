@@ -6,6 +6,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# sanitizers
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+if(ENABLE_ASAN)
+	add_compile_options(-g -O0 -fsanitize=address -fno-omit-frame-pointer)
+	add_link_options(-fsanitize=address)
+endif()
+
 # library
 add_library(interpreter
 	src/lexer.cpp
