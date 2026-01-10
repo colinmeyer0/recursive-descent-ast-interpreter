@@ -1,0 +1,7 @@
+let x = 1;
+let y = ;
+let z = 2;
+if (x < z) {
+    x = x + 1;
+    return;
+}

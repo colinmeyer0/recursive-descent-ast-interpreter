@@ -1,0 +1,3 @@
+let x = 1 + 2 * 3 == 7 && true || false;
+let y = (1 + 2) * (3 + 4);
+let z = -1 + !false;

@@ -4,6 +4,8 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <initializer_list>
+#include <utility>
 
 #include "token.hpp"
 

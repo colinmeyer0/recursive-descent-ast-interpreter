@@ -1,8 +1,5 @@
 #include "parser.hpp"
 
-#include <initializer_list>
-#include <utility>
-
 Parser::Parser(std::vector<Token> tokens) : tokens_(std::move(tokens)) {}
 
 std::vector<StmtPtr> Parser::parse() {
