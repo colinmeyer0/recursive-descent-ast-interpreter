@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # library
 add_library(interpreter
 	src/lexer.cpp
+	src/parser.cpp
 	src/util/file_io.cpp
 	src/util/cli.cpp
 )
@@ -19,5 +20,11 @@ add_executable(interpreter_cli src/main.cpp)
 target_link_libraries(interpreter_cli PRIVATE interpreter)
 
 # test executables
-add_executable(lexer_test tests/test_lexer.cpp)
+add_executable(lexer_test tests/lexer/lexer_test.cpp)
 target_link_libraries(lexer_test PRIVATE interpreter)
+
+add_executable(parser_test
+	tests/parser/parser_test.cpp
+	tests/parser/ast_printer.cpp
+)
+target_link_libraries(parser_test PRIVATE interpreter)

@@ -1,13 +1,16 @@
+Language: Cpp
 BasedOnStyle: LLVM
-BreakBeforeBraces: Attach
 
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-
 ColumnLimit: 0
 
+BreakBeforeBraces: Custom
+BraceWrapping:
+  # 🔴 Force `else` onto a new line
+  BeforeElse: true
+
 AllowShortCaseLabelsOnASingleLine: true
-AllowShortStatementsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLoopsOnASingleLine: true

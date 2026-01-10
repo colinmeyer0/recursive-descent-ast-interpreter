@@ -66,16 +66,12 @@ bool Lexer::scan_paired_operator(char c) {
     // check next char to see if paired, otherwise error
     switch (c) {
     case '&':
-        if (match('&'))
-            add_token(TokenType::AND_AND);
-        else
-            add_error("Unexpected '&' without pair.", start_pos_);
+        if (match('&')) add_token(TokenType::AND_AND);
+        else add_error("Unexpected '&' without pair.", start_pos_);
         return true;
     case '|':
-        if (match('|'))
-            add_token(TokenType::OR_OR);
-        else
-            add_error("Unexpected '|' without pair.", start_pos_);
+        if (match('|')) add_token(TokenType::OR_OR);
+        else add_error("Unexpected '|' without pair.", start_pos_);
         return true;
     default:
         return false;
@@ -87,16 +83,17 @@ bool Lexer::scan_slash_or_comment(char c) {
 
     // peak next char to see if comment -> discard rest of line
     if (match('/')) {
-        while (peek() != '\n' && !is_at_end())
-            advance();
-    } else {
+        while (peek() != '\n' && !is_at_end()) advance();
+    }
+    else {
         add_token(TokenType::SLASH);
     }
     return true;
 }
 
 void Lexer::scan_number() {
-    while (is_digit(peek())) advance(); // advance to end of number
+    while (is_digit(peek()))
+        advance(); // advance to end of number
 
     // add value of number to token vector
     std::string text = source_.substr(start_, current_ - start_);
@@ -105,7 +102,8 @@ void Lexer::scan_number() {
 }
 
 void Lexer::scan_identifier_or_keyword() {
-    while (is_alnum(peek())) advance(); // advance to end of identifier/keyword
+    while (is_alnum(peek()))
+        advance(); // advance to end of identifier/keyword
 
     std::string text = source_.substr(start_, current_ - start_);
 
@@ -132,12 +130,15 @@ void Lexer::scan_identifier_or_keyword() {
 
     // add keyword token
     TokenType type = it->second;
-    if (type == TokenType::TRUE)
+    if (type == TokenType::TRUE) {
         add_token(type, true);
-    else if (type == TokenType::FALSE)
+    }
+    else if (type == TokenType::FALSE) {
         add_token(type, false);
-    else
+    }
+    else {
         add_token(type);
+    }
 }
 
 void Lexer::add_token(TokenType type) {
@@ -173,18 +174,19 @@ bool Lexer::is_at_end() const {
 
 char Lexer::advance() {
     char c = source_[current_++]; // consume current char
-    if (c == '\n') { // newline
+    if (c == '\n') {              // newline
         line_++;
         col_ = 1;
-    } else {
+    }
+    else {
         col_++; // advance column on same line
     }
     return c;
 }
 
 bool Lexer::match(char expected) {
-    if (is_at_end() || source_[current_] != expected) {
-        return false; // no match
+    if (is_at_end() || source_[current_] != expected) { // no match
+        return false; 
     }
     advance(); // consume matched char
     return true;

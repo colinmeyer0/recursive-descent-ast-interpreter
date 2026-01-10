@@ -2,10 +2,10 @@
 
 // Lexer turns a source string into a vector of tokens
 
-#include <string>
-#include <vector>
 #include <cctype>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "token.hpp"
 
@@ -14,17 +14,17 @@ class Lexer {
     explicit Lexer(std::string source); // construct Lexer class
 
     std::vector<Token> scan_tokens();               // Scan full input into tokens
-    const std::vector<std::string> &errors() const; // error strings for basic lexer errors
+    const std::vector<std::string> &errors() const; // returns array of lexer error messages
 
   private:
     // main logic
     void scan_token();                                                // Scan a single token starting at current_
     void add_token(TokenType type);                                   // Token without literal
     void add_token(TokenType type, Literal literal);                  // Token with literal value
-    void add_error(const std::string &message, const SourcePos &pos); // Format error
+    void add_error(const std::string &message, const SourcePos &pos); // format error and add to error vector
 
     // scanning functions
-    bool is_whitespace(char c) const;          // discard whitespace
+    bool is_whitespace(char c) const;    // discard whitespace
     bool scan_single_char_token(char c); // scan single char tokens and add to token vector
     bool scan_two_char_operator(char c); // scan two char logical operators and add to token vector
     bool scan_paired_operator(char c);   // scan '&&' or '||' and add to token vector

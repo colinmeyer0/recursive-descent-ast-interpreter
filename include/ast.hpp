@@ -15,17 +15,16 @@ struct Stmt;
 using ExprPtr = std::unique_ptr<Expr>;
 using StmtPtr = std::unique_ptr<Stmt>;
 
-
 // === HELPER TYPES ===
 
 struct TextInfo { // raw text and span
     std::string text;
-    Span span;
+    Span span; // span of only the text
 };
 
-struct Op { // token type and span
-    TokenType type;
-    Span span;
+struct Op {         // token type and span
+    TokenType type; // operator type
+    Span span;      // operator span
 };
 
 // === EXPRESSIONS ===
@@ -35,8 +34,8 @@ struct LiteralExpr { // int/bool
     Literal value;
 };
 
-struct VariableExpr { // identifier
-    TextInfo name;
+struct IdentifierExpr { // identifier
+    TextInfo name;      // identifier text and span (same span as Expr wrapper in this case)
 };
 
 struct GroupingExpr { // parentheses, brackets, etc.
@@ -68,7 +67,7 @@ struct CallExpr { // function call
 // all variants of expressions
 using ExprVariant = std::variant<
     LiteralExpr,
-    VariableExpr,
+    IdentifierExpr,
     GroupingExpr,
     UnaryExpr,
     BinaryExpr,
@@ -80,7 +79,6 @@ struct Expr {
     ExprVariant node;
     Span span;
 };
-
 
 // === STATEMENTS ===
 // definition: performs an action
@@ -109,11 +107,11 @@ struct WhileStmt { // while statement
     StmtPtr body;
 };
 
-struct BreakStmt {}; // break statement
+struct BreakStmt {};    // break statement
 struct ContinueStmt {}; // continue statement
 
 struct ReturnStmt { // return statement (optional value)
-    ExprPtr value; // can be nullptr
+    ExprPtr value;  // can be nullptr
 };
 
 struct FnStmt { // function statement
@@ -133,7 +131,6 @@ using StmtVariant = std::variant<
     ContinueStmt,
     ReturnStmt,
     FnStmt>;
-
 
 // wrapper for statement variants (with span)
 struct Stmt {

@@ -4,13 +4,13 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "token.hpp"
-#include "util/file_io.hpp"
 #include "util/cli.hpp"
+#include "util/file_io.hpp"
 
 int main(int argc, char **argv) {
     // Missing input path
     if (argc < 2) {
-        std::cerr << "Usage: basic-interpreter <path>\n";
+        std::cerr << "Usage: ./build/interpreter_cli <path>\n";
         return 1;
     }
 
@@ -22,13 +22,13 @@ int main(int argc, char **argv) {
     }
 
     // use lexer to create token vector
-    Lexer lexer(std::move(source)); // Create lexer
+    Lexer lexer(std::move(source));                  // Create lexer
     std::vector<Token> tokens = lexer.scan_tokens(); // Lex entire input
-    if (check_lexer_errors(lexer)) return 1; // lexing failure
+    if (check_lexer_errors(lexer)) return 1;         // lexing failure
 
     // use parser to create AST
-    Parser parser(std::move(tokens)); // create parser
-    std::vector<StmtPtr> program = parser.parse(); // parse token stream
+    Parser parser(std::move(tokens));          // create parser
+    std::vector<StmtPtr> ast = parser.parse(); // parse token array
     if (check_parser_errors(parser)) return 1; // parsing failure
 
     return 0; // Success
