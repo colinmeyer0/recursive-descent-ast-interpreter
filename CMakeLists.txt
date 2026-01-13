@@ -15,7 +15,9 @@ endif()
 
 # library
 add_library(interpreter
+	src/environment.cpp
 	src/lexer.cpp
+	src/interpreter.cpp
 	src/parser.cpp
 	src/util/file_io.cpp
 	src/util/cli.cpp
@@ -35,3 +37,6 @@ add_executable(parser_test
 	tests/parser/ast_printer.cpp
 )
 target_link_libraries(parser_test PRIVATE interpreter)
+
+add_executable(interpreter_test tests/interpreter/interpreter_test.cpp)
+target_link_libraries(interpreter_test PRIVATE interpreter)

@@ -4,12 +4,10 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include <initializer_list>
-#include <utility>
 
 #include "token.hpp"
 
-// Forward declarations
+// forward declarations
 struct Expr;
 struct Stmt;
 
@@ -19,54 +17,68 @@ using StmtPtr = std::unique_ptr<Stmt>;
 
 // === HELPER TYPES ===
 
-struct TextInfo { // raw text and span
+/// raw text and span
+struct TextInfo {
     std::string text;
-    Span span; // span of only the text
+    /// span of only the text
+    Span span;
 };
 
-struct Op {         // token type and span
-    TokenType type; // operator type
-    Span span;      // operator span
+/// token type and span
+struct Op {
+    /// operator type
+    TokenType type;
+    /// operator span
+    Span span;
 };
 
 // === EXPRESSIONS ===
 // definition: produces a value
 
-struct LiteralExpr { // int/bool
+/// int or bool
+struct LiteralExpr {
     Literal value;
 };
 
-struct IdentifierExpr { // identifier
-    TextInfo name;      // identifier text and span (same span as Expr wrapper in this case)
+/// identifier
+struct IdentifierExpr {
+    /// identifier text and span (same span as Expr wrapper in this case)
+    TextInfo name;
 };
 
-struct GroupingExpr { // parentheses, brackets, etc.
+/// parentheses, brackets, etc.
+struct GroupingExpr {
     ExprPtr expression;
 };
 
-struct UnaryExpr { // '!x', '-x', etc.
+/// '!x', '-x', etc
+struct UnaryExpr {
     Op op;
     ExprPtr right;
 };
 
-struct BinaryExpr { // expression operator expression ('3 + 4', 'x < y', etc.)
+/// expression operator expression
+struct BinaryExpr {
     ExprPtr left;
     Op op;
     ExprPtr right;
 };
 
-struct AssignExpr { // assignment
+/// assignment
+struct AssignExpr {
     TextInfo name;
     ExprPtr value;
 };
 
-struct CallExpr { // function call
+/// function call
+struct CallExpr {
     ExprPtr callee;
     std::vector<ExprPtr> arguments;
-    Span paren_span; // span of parentheses (for error reporting)
+    /// span of parentheses for error reporting
+    Span paren_span;
 };
 
-// all variants of expressions
+/// all variants of expressions
 using ExprVariant = std::variant<
     LiteralExpr,
     IdentifierExpr,
@@ -76,7 +88,7 @@ using ExprVariant = std::variant<
     AssignExpr,
     CallExpr>;
 
-// wrapper for expression variants (with span)
+/// wrapper for expression variants with span
 struct Expr {
     ExprVariant node;
     Span span;
@@ -85,44 +97,53 @@ struct Expr {
 // === STATEMENTS ===
 // definition: performs an action
 
-struct ExprStmt { // store expression
+/// store expression
+struct ExprStmt {
     ExprPtr expression;
 };
 
-struct LetStmt { // declaration (must be initialized)
+/// declaration (must be initialized)
+struct LetStmt {
     TextInfo name;
-    ExprPtr initializer; // never nullptr
+    /// never nullptr
+    ExprPtr initializer;
 };
 
-struct BlockStmt { // block of code (contained in braces)
+/// block of code (contained in braces)
+struct BlockStmt {
     std::vector<StmtPtr> statements;
 };
 
-struct IfStmt { // if statement (else is optional)
+/// else is optional
+struct IfStmt {
     ExprPtr condition;
     StmtPtr then_branch;
-    StmtPtr else_branch; // can be nullptr
+    /// can be nullptr
+    StmtPtr else_branch;
 };
 
-struct WhileStmt { // while statement
+struct WhileStmt {
     ExprPtr condition;
     StmtPtr body;
 };
 
-struct BreakStmt {};    // break statement
-struct ContinueStmt {}; // continue statement
+struct BreakStmt {};
+struct ContinueStmt {};
 
-struct ReturnStmt { // return statement (optional value)
-    ExprPtr value;  // can be nullptr
+/// optional value
+struct ReturnStmt {
+    ExprPtr value;
 };
 
-struct FnStmt { // function statement
+/// function statement
+struct FnStmt {
     TextInfo name;
     std::vector<TextInfo> params;
-    BlockStmt body; // not a pointer
+    /// not a pointer
+    BlockStmt body;
 };
 
-// all variants of statements
+/// all variants of statements
 using StmtVariant = std::variant<
     ExprStmt,
     LetStmt,
@@ -134,7 +155,7 @@ using StmtVariant = std::variant<
     ReturnStmt,
     FnStmt>;
 
-// wrapper for statement variants (with span)
+/// wrapper for statement variants (with span)
 struct Stmt {
     StmtVariant node;
     Span span;

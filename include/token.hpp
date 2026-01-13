@@ -1,50 +1,50 @@
 #pragma once
 
-// Core token and source location types used across the lexer/parser
+/// core token and source location types used across the lexer and parser
 
 #include <cstddef>
 #include <string>
 #include <variant>
 
-// Token kinds recognized by the lexer
+/// token kinds recognized by the lexer
 enum class TokenType {
-    // Grouping
-    LEFT_PAREN,  // (
-    RIGHT_PAREN, // )
-    LEFT_BRACE,  // {
-    RIGHT_BRACE, // }
+    // grouping
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    LEFT_BRACE,
+    RIGHT_BRACE,
 
-    // Statement structure
-    SEMICOLON, // ;
-    COMMA,     // ,
+    // statement structure
+    SEMICOLON,
+    COMMA,
 
-    // Arithmetic
-    PLUS,  // +
-    MINUS, // -
-    STAR,  // *
-    SLASH, // /
+    // arithmetic
+    PLUS,
+    MINUS,
+    STAR,
+    SLASH,
 
-    // Assignment
-    EQUAL, // =
+    // assignment
+    EQUAL,
 
-    // Comparison
-    EQUAL_EQUAL,   // ==
-    BANG_EQUAL,    // !=
-    LESS,          // <
-    LESS_EQUAL,    // <=
-    GREATER,       // >
-    GREATER_EQUAL, // >=
-    BANG,          // !
+    // comparison
+    EQUAL_EQUAL,
+    BANG_EQUAL,
+    LESS,
+    LESS_EQUAL,
+    GREATER,
+    GREATER_EQUAL,
+    BANG,
 
-    // Logical
-    AND_AND, // &&
-    OR_OR,   // ||
+    // logical
+    AND_AND,
+    OR_OR,
 
-    // Literals
-    IDENTIFIER, // variable/function names
+    // literals
+    IDENTIFIER, // variable or function names
     NUMBER,     // integer literal
 
-    // Keywords
+    // keywords
     LET,
     IF,
     ELSE,
@@ -54,39 +54,48 @@ enum class TokenType {
     RETURN,
     FN,
 
-    // Booleans
+    /// booleans
     TRUE,
     FALSE,
 
-    // End of file
+    /// end of file
     EOF_
 };
 
-// Literal payload for tokens that carry values
+/// literal payload for tokens that carry values
 using Literal = std::variant<std::monostate, int, bool>;
 
-// 1-based line/column position at a specific point in source
+/// 1-based line and column position at a specific point in source
 struct SourcePos {
-    int line = 1; // Line number
-    int col = 1;  // Column number
+    /// line number
+    int line = 1;
+    /// column number
+    int col = 1;
 };
 
-// Absolute byte span plus the line/column at the start
+/// absolute byte span plus the line and column at the start
 struct Span {
-    std::size_t start = 0; // Inclusive start offset
-    std::size_t end = 0;   // Exclusive end offset
-    SourcePos pos;         // Line/col for start
+    /// inclusive start offset
+    std::size_t start = 0;
+    /// exclusive end offset
+    std::size_t end = 0;
+    /// line and col for start
+    SourcePos pos;
 };
 
-// A single scanned token, including lexeme and parsed literal
+/// a single scanned token, including lexeme and parsed literal
 struct Token {
-    TokenType type;     // Token kind
-    std::string lexeme; // Raw text slice
-    Literal literal;    // Parsed value if applicable
-    Span span;          // Location metadata
+    /// token kind
+    TokenType type;
+    /// raw text slice
+    std::string lexeme;
+    /// parsed value if applicable
+    Literal literal;
+    /// location metadata
+    Span span;
 };
 
-// string name for debugging output
+/// string name for debugging output
 inline const char *token_type_name(TokenType type) {
     switch (type) {
     case TokenType::LEFT_PAREN: return "LEFT_PAREN";
@@ -123,5 +132,5 @@ inline const char *token_type_name(TokenType type) {
     case TokenType::FALSE: return "FALSE";
     case TokenType::EOF_: return "EOF";
     }
-    return "UNKNOWN"; // Fallback for unexpected enum values
+    return "UNKNOWN";
 }

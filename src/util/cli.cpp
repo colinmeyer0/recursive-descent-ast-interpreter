@@ -1,4 +1,6 @@
-#include <util/cli.hpp>
+#include <iostream>
+
+#include "util/cli.hpp"
 
 bool check_lexer_errors(const Lexer &lexer) {
     // lexing failure
@@ -14,6 +16,16 @@ bool check_lexer_errors(const Lexer &lexer) {
 bool check_parser_errors(const Parser &parser) {
     if (!parser.errors().empty()) {
         for (const auto &err : parser.errors()) {
+            std::cerr << err << "\n";
+        }
+        return true;
+    }
+    return false;
+}
+
+bool check_interpreter_errors(const Interpreter &interpreter) {
+    if (!interpreter.errors().empty()) {
+        for (const auto &err : interpreter.errors()) {
             std::cerr << err << "\n";
         }
         return true;

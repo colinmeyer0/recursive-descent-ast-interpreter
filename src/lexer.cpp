@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include "lexer.hpp"
 
 Lexer::Lexer(std::string source) : source_(source) {} // Store source string

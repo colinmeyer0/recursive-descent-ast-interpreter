@@ -11,7 +11,7 @@
 int main(int argc, char **argv) {
     // Missing input path
     if (argc < 2) {
-        std::cerr << "Usage: ./build/interpreter_cli <path>\n";
+        std::cerr << "Usage: ./build/interpreter_test <path>\n";
         return 1;
     }
 

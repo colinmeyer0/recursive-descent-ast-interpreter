@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fstream>
-#include <sstream>
+#include <string>
 
-bool read_file(const std::string &path, std::string &out); // Read entire file into string. false if error
+/// read entire file into string, false if error
+bool read_file(const std::string &path, std::string &out);

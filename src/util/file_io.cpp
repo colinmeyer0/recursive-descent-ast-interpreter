@@ -1,3 +1,6 @@
+#include <fstream>
+#include <sstream>
+
 #include "util/file_io.hpp"
 
 bool read_file(const std::string &path, std::string &out) {
