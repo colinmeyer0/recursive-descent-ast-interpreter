@@ -10,8 +10,9 @@
 /// environment.hpp contents
 namespace interpreter_detail {
 struct Function;
+struct BuiltinFunction;
 
-using Value = std::variant<std::monostate, int, bool, std::shared_ptr<Function>>;
+using Value = std::variant<std::monostate, int, bool, std::shared_ptr<Function>, std::shared_ptr<BuiltinFunction>>;
 
 struct Environment {
     /// create environment with optional enclosing scope

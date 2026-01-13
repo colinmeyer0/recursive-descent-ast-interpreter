@@ -15,6 +15,7 @@ endif()
 
 # library
 add_library(interpreter
+	src/builtins.cpp
 	src/environment.cpp
 	src/lexer.cpp
 	src/interpreter.cpp

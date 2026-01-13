@@ -23,6 +23,7 @@ class Interpreter {
     using Value = interpreter_detail::Value;
     using Environment = interpreter_detail::Environment;
     using Function = interpreter_detail::Function;
+    using BuiltinFunction = interpreter_detail::BuiltinFunction;
 
     /// sentinal-like error reporting type
     struct RuntimeError : public std::runtime_error {
@@ -63,7 +64,7 @@ class Interpreter {
     int expect_number(const Value &value, const Span &span, const std::string &context);
     /// compare values for equality
     bool values_equal(const Value &left, const Value &right) const;
-    /// human-readable type name for error messages
+    /// type name for error messages
     const char *value_type_name(const Value &value) const;
 
     /// raise a runtime error with span context

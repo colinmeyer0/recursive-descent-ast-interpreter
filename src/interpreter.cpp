@@ -1,12 +1,15 @@
 #include <utility>
 
+#include "builtins.hpp"
 #include "interpreter.hpp"
 
 Interpreter::RuntimeError::RuntimeError(Span error_span, const std::string &message) // define error construction
     : std::runtime_error(message), span(error_span) {}
 
 Interpreter::Interpreter() // construct interpreter with Environment class as shared pointer
-    : globals_(std::make_shared<Environment>()), environment_(globals_) {}
+    : globals_(std::make_shared<Environment>()), environment_(globals_) {
+    register_builtins(*globals_);
+}
 
 void Interpreter::interpret(const std::vector<StmtPtr> &statements) {
     // execute top-level statements, record first runtime error
@@ -271,10 +274,36 @@ void Interpreter::execute_block(const std::vector<StmtPtr> &statements, std::sha
 }
 
 Interpreter::Value Interpreter::evaluate_call(const CallExpr &expr, const Span &span) {
-    // only functions are callable
+    // only functions or builtins are callable
     Value callee = evaluate(*expr.callee);
+    // handle builtin callables first
+    if (std::holds_alternative<std::shared_ptr<BuiltinFunction>>(callee)) {
+        const std::shared_ptr<BuiltinFunction> &builtin = std::get<std::shared_ptr<BuiltinFunction>>(callee);
+        if (!builtin) {
+            runtime_error(span, "Attempted to call an invalid builtin.");
+        }
+
+        // enforce builtin arity before evaluating arguments
+        if (!builtin->is_variadic()) {
+            const std::size_t expected = builtin->arity();
+            if (expr.arguments.size() != expected) {
+                runtime_error(expr.paren_span, "Expected " + std::to_string(expected) +
+                                                   " arguments but got " + std::to_string(expr.arguments.size()) + ".");
+            }
+        }
+
+        // evaluate arguments left-to-right for builtin call
+        std::vector<Value> arguments;
+        arguments.reserve(expr.arguments.size());
+        for (const ExprPtr &arg : expr.arguments) {
+            arguments.push_back(evaluate(*arg));
+        }
+        // call builtin implementation
+        return builtin->call(arguments);
+    }
+
     if (!std::holds_alternative<std::shared_ptr<Function>>(callee)) {
-        runtime_error(span, "Can only call functions.");
+        runtime_error(span, "Can only call functions or builtins.");
     }
 
     // check environment reference to function
@@ -287,7 +316,7 @@ Interpreter::Value Interpreter::evaluate_call(const CallExpr &expr, const Span &
     const std::vector<TextInfo> &params = function->declaration->params;
     if (expr.arguments.size() != params.size()) {
         runtime_error(expr.paren_span, "Expected " + std::to_string(params.size()) +
-                                           " arguments but got " + std::to_string(expr.arguments.size()) + ".");
+            " arguments but got " + std::to_string(expr.arguments.size()) + ".");
     }
 
     // evaluate argument expressions left-to-right
@@ -352,7 +381,7 @@ int Interpreter::expect_number(const Value &value, const Span &span, const std::
 }
 
 bool Interpreter::values_equal(const Value &left, const Value &right) const {
-    // equality is strict by type; functions compare by identity
+    // equality is strict by type; callables compare by identity
     if (left.index() != right.index()) { // not same type
         return false;
     }
@@ -365,7 +394,11 @@ bool Interpreter::values_equal(const Value &left, const Value &right) const {
     if (std::holds_alternative<bool>(left)) {
         return std::get<bool>(left) == std::get<bool>(right);
     }
-    return std::get<std::shared_ptr<Function>>(left) == std::get<std::shared_ptr<Function>>(right);
+    if (std::holds_alternative<std::shared_ptr<Function>>(left)) {
+        return std::get<std::shared_ptr<Function>>(left) == std::get<std::shared_ptr<Function>>(right);
+    }
+    return std::get<std::shared_ptr<BuiltinFunction>>(left) ==
+           std::get<std::shared_ptr<BuiltinFunction>>(right);
 }
 
 const char *Interpreter::value_type_name(const Value &value) const {
@@ -379,7 +412,10 @@ const char *Interpreter::value_type_name(const Value &value) const {
     if (std::holds_alternative<bool>(value)) {
         return "boolean";
     }
-    return "function";
+    if (std::holds_alternative<std::shared_ptr<Function>>(value)) {
+        return "function";
+    }
+    return "builtin";
 }
 
 void Interpreter::runtime_error(const Span &span, const std::string &message) {
