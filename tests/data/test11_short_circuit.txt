@@ -1,0 +1,6 @@
+let x = 0;
+let y = false && ((x = 5) == 5);
+let z = true || ((x = 6) == 6);
+print(x); // should stay 0
+print(y);
+print(z);

@@ -1,0 +1,7 @@
+fn do_nothing() {
+    let x = 1;
+}
+
+let value = do_nothing();
+print(value);
+print(value == do_nothing());

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -17,6 +18,10 @@ class Interpreter {
     void interpret(const std::vector<StmtPtr> &statements);
     /// runtime error messages collected during interpretation
     const std::vector<std::string> &errors() const;
+    /// trace hook created after statement execution
+    using TraceHook = std::function<void(const Stmt &, const interpreter_detail::Value *)>;
+    /// set or clear the trace hook
+    void set_trace_hook(TraceHook hook);
 
   private:
     // bring environment definitions into scope
@@ -45,11 +50,14 @@ class Interpreter {
     std::shared_ptr<Environment> environment_;
     int loop_depth_ = 0;
     int function_depth_ = 0;
+    TraceHook trace_hook_;
 
     /// execute a statement node
     void execute(const Stmt &stmt);
     /// evaluate an expression node
     Value evaluate(const Expr &expr);
+    /// call trace hook after statement execution
+    void trace_stmt(const Stmt &stmt, const Value *value);
 
     /// execute statements in a new environment
     void execute_block(const std::vector<StmtPtr> &statements, std::shared_ptr<Environment> env);

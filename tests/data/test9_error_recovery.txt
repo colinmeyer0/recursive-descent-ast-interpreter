@@ -1,5 +1,5 @@
 let x = 1;
-let y = ;
+let y = ; // should throw "Line 2, col 9: Expect expression."
 let z = 2;
 if (x < z) {
     x = x + 1;

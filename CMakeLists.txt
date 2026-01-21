@@ -39,5 +39,8 @@ add_executable(parser_test
 )
 target_link_libraries(parser_test PRIVATE interpreter)
 
-add_executable(interpreter_test tests/interpreter/interpreter_test.cpp)
+add_executable(interpreter_test
+	tests/interpreter/interpreter_test.cpp
+	tests/interpreter/interpreter_printer.cpp
+)
 target_link_libraries(interpreter_test PRIVATE interpreter)

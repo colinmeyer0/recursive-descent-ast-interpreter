@@ -29,12 +29,26 @@ const std::vector<std::string> &Interpreter::errors() const {
     return errors_;
 }
 
+void Interpreter::set_trace_hook(TraceHook hook) {
+    trace_hook_ = std::move(hook);
+}
+
+void Interpreter::trace_stmt(const Stmt &stmt, const Value *value) {
+    if (trace_hook_) {
+        trace_hook_(stmt, value);
+    }
+}
+
 void Interpreter::execute(const Stmt &stmt) {
     // expression statement
     if (std::holds_alternative<ExprStmt>(stmt.node)) {
         const ExprStmt &node = std::get<ExprStmt>(stmt.node);
         if (node.expression) {
-            evaluate(*node.expression);
+            Value value = evaluate(*node.expression);
+            trace_stmt(stmt, &value);
+        }
+        else {
+            trace_stmt(stmt, nullptr);
         }
         return;
     }
@@ -43,9 +57,10 @@ void Interpreter::execute(const Stmt &stmt) {
     if (std::holds_alternative<LetStmt>(stmt.node)) {
         const LetStmt &node = std::get<LetStmt>(stmt.node);
         Value value = evaluate(*node.initializer);
-        if (!environment_->define(node.name.text, std::move(value))) { // add to environment if variable hasn't already been declared
+        if (!environment_->define(node.name.text, value)) { // add to environment if variable hasn't already been declared
             runtime_error(node.name.span, "Variable already declared in this scope: '" + node.name.text + "'.");
         }
+        trace_stmt(stmt, &value);
         return;
     }
 
@@ -54,6 +69,7 @@ void Interpreter::execute(const Stmt &stmt) {
         const BlockStmt &node = std::get<BlockStmt>(stmt.node);
         std::shared_ptr<Environment> block_env = std::make_shared<Environment>(environment_);
         execute_block(node.statements, std::move(block_env));
+        trace_stmt(stmt, nullptr);
         return;
     }
 
@@ -69,6 +85,7 @@ void Interpreter::execute(const Stmt &stmt) {
         else if (node.else_branch) { // evaluate else brach
             execute(*node.else_branch);
         }
+        trace_stmt(stmt, nullptr);
         return;
     }
 
@@ -95,6 +112,7 @@ void Interpreter::execute(const Stmt &stmt) {
         }
         // exit loop
         --loop_depth_;
+        trace_stmt(stmt, nullptr);
         return;
     }
 
@@ -103,12 +121,14 @@ void Interpreter::execute(const Stmt &stmt) {
         if (loop_depth_ == 0) {
             runtime_error(stmt.span, "Break used outside of a loop.");
         }
+        trace_stmt(stmt, nullptr);
         throw BreakSignal{};
     }
     if (std::holds_alternative<ContinueStmt>(stmt.node)) {
         if (loop_depth_ == 0) {
             runtime_error(stmt.span, "Continue used outside of a loop.");
         }
+        trace_stmt(stmt, nullptr);
         throw ContinueSignal{};
     }
 
@@ -119,6 +139,7 @@ void Interpreter::execute(const Stmt &stmt) {
             runtime_error(stmt.span, "Return used outside of a function.");
         }
         Value value = node.value ? evaluate(*node.value) : Value{std::monostate{}};
+        trace_stmt(stmt, &value);
         throw ReturnSignal{std::move(value)};
     }
 
@@ -131,6 +152,7 @@ void Interpreter::execute(const Stmt &stmt) {
         if (!environment_->define(node.name.text, fn)) { // declare function if not declared already
             runtime_error(node.name.span, "Function already declared in this scope: '" + node.name.text + "'.");
         }
+        trace_stmt(stmt, nullptr);
         return;
     }
 }
@@ -311,6 +333,10 @@ Interpreter::Value Interpreter::evaluate_call(const CallExpr &expr, const Span &
     if (!function || !function->declaration) {
         runtime_error(span, "Attempted to call an invalid function.");
     }
+    std::shared_ptr<Environment> closure = function->closure.lock();
+    if (!closure) {
+        runtime_error(span, "Attempted to call a function with an expired closure.");
+    }
 
     // enforce arity before evaluating arguments
     const std::vector<TextInfo> &params = function->declaration->params;
@@ -327,7 +353,7 @@ Interpreter::Value Interpreter::evaluate_call(const CallExpr &expr, const Span &
     }
 
     // bind parameters in a new environment connected to the closure
-    std::shared_ptr<Environment> call_env = std::make_shared<Environment>(function->closure);
+    std::shared_ptr<Environment> call_env = std::make_shared<Environment>(std::move(closure));
     for (std::size_t i = 0; i < params.size(); ++i) {
         if (!call_env->define(params[i].text, arguments[i])) { // define parameters in new environment if not already defined
             runtime_error(params[i].span, "Duplicate parameter name '" + params[i].text + "'.");

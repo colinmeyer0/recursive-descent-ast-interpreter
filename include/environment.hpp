@@ -37,6 +37,6 @@ struct Environment {
 struct Function {
     const FnStmt *declaration = nullptr;
     /// environment from which the function was defined
-    std::shared_ptr<Environment> closure;
+    std::weak_ptr<Environment> closure;
 };
 } // namespace interpreter_detail

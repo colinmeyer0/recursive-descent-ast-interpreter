@@ -2,6 +2,7 @@
 #include <string>
 
 #include "interpreter.hpp"
+#include "interpreter_printer.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "token.hpp"
@@ -33,6 +34,7 @@ int main(int argc, char **argv) {
     if (check_parser_errors(parser)) return 1; // parsing failure
 
     Interpreter interpreter;                             // create interpreter
+    install_trace_printer(interpreter, std::cout);
     interpreter.interpret(ast);                          // interpreter AST
     if (check_interpreter_errors(interpreter)) return 1; // interpreting error
 
