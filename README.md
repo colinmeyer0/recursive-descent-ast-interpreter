@@ -1,10 +1,10 @@
 # Recursive-Descent AST Interpreter (C++20)
 
-A small tree-walk interpreter for a C-flavored language, written in C++. Its design is focused on the core interpreter pipeline—**lexing → parsing → AST → evaluation**—with separation of stages, explicit ownership, and consistent source-location error reporting.
+A small tree-walk interpreter for a C-flavored language, written in C++. Its design is focused on the core interpreter pipeline, including **lexing, parsing, AST, and evaluation**, with separation of stages, explicit ownership, and consistent source-location error reporting.
 
 ## Overview
 
-This project serves as a testpiece of a modern interpreter front-end and execution engine, emphasizing design patterns and abstractions commonly used in compiler, systems, and embedded-related software. The implementation prioritizes explicit memory control and efficient execution, while remaining small enough to reason about end-to-end. 
+This project serves as a testpiece of a modern interpreter front-end and execution engine, emphasizing design patterns and abstractions commonly used in compiler, systems, and embedded-related software. The implementation prioritizes explicit memory control and efficient execution.
 
 Its structure is purposefully designed to expose the internal mechanics of the program, with optional tracing that prints textual representations of control flow during lexing, parsing, and interpretation execution stages.
 
